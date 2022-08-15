@@ -26,9 +26,6 @@ data Empty : Set where
 Empty-induction : ∀ {C : Empty → Set} → (∀ (x : Empty) → C x)
 Empty-induction ()
 
-𝟘 : Set
-𝟘 = Empty
-
 data 𝟙 : Set where
   pt : 𝟙
 
@@ -168,17 +165,17 @@ flatten-list nil = nil
 flatten-list (cons nil l₁) = flatten-list l₁
 flatten-list (cons (cons x l) l₁) = cons x (flatten-list (cons l l₁))
 
-_·_ : ∀ {A : Set}  {x y z : A} →  (x ≡ y) → (y ≡ z) → (x ≡ z)
-p · q = concat p q
+_·_ : ∀ {A : Set}  {x y z : A} →  (y ≡ z) → (x ≡ y) → (x ≡ z)
+p · q = concat q p
 
-concat-assoc : ∀ {A : Set} {x y z w : A} (p : x ≡ y) (q : y ≡ z) (t : z ≡ w) →  (( (p · q ) · t ) ≡  ( p · (q · t)))
+concat-assoc : ∀ {A : Set} {x y z w : A} (p : x ≡ y) (q : y ≡ z) (t : z ≡ w) →  ((t · (q · p)) ≡  ((t · q) · p))
 concat-assoc (refl _) (refl _) t = refl t
 
-refl-l : ∀ {A : Set} {x y  : A } (p : x  ≡ y) →  ((refl x) · p) ≡ p
+refl-l : ∀ {A : Set} {x y  : A } (p : x  ≡ y) →  ((refl y) · p) ≡ p
 refl-l (refl _) = refl _
 
-refl-r : ∀ {A : Set} {x y : A} (p : x ≡ y) → (p · (refl y)) ≡ p
-refl-r (refl _) = refl _
+refl-r : ∀ {A : Set} {x y : A} (p : x ≡ y) → (p · (refl x)) ≡ p
+refl-r p = refl p
 
 left-inv : ∀ {A : Set} {x y : A} (p : x ≡ y) → ((inv-path p) ·  p) ≡ (refl _)
 left-inv (refl _) = refl _
@@ -202,64 +199,4 @@ ap-comp : ∀ {A B C : Set} {x y : A} (p : x ≡ y) (f : A → B) (g : B → C) 
 ap-comp (refl x) f g = refl _
 
 
-ap-refl : ∀ {A B : Set} {x : A} (f : A → B) → (fun-ap f (refl x)) ≡ (refl (f x))
-ap-refl f = refl _
-
-ap-inv : ∀ {A B : Set} {x y : A} (p : x ≡ y) (f : A → B) → (fun-ap f (inv-path p)) ≡ (inv-path (fun-ap f p))
-ap-inv (refl _) f = refl _
-
-ap-concat : ∀ {A B : Set} {x y z : A} (p : x ≡ y) (q : y ≡ z) (f : A → B)  → (fun-ap f (p · q)) ≡ ( (fun-ap f p) · (fun-ap f q))
-ap-concat (refl _) q f = refl _
-
-transp : ∀ {A : Set} (B : A → Set)  {x y : A}  →  (x ≡ y) → B x → B y
-transp B (refl x) z = z
-
-fun-ap-dep : ∀ {A : Set} {B : A → Set} (f : ∀ (x : A) → B x) {x y : A}  (p : x ≡ y) →  (transp B p (f x)) ≡ (f y)
-fun-ap-dep f (refl _) = refl _
-
-id-Σ-type-endpoint : ∀ {A : Set} (a : A) (y : Σ A (λ x → a ≡ x))   →  (deppair a (refl a)) ≡ y
-id-Σ-type-endpoint a (deppair .a (refl .a)) = refl _
-
-_+ℕ_ : ℕ → ℕ → ℕ
-n +ℕ m = add-ℕ n m
-
-infixl 1 _≡_
-
-left-unit-law-add-ℕ : ∀ (n : ℕ) → ((zero +ℕ n) ≡ n)
-left-unit-law-add-ℕ n = refl _ 
-
-
-right-unit-law-add-ℕ : ∀ ( n : ℕ) → (n +ℕ zero ≡ n)
-right-unit-law-add-ℕ zero = refl _
-right-unit-law-add-ℕ (succ n) = fun-ap succ (right-unit-law-add-ℕ n)
-
-left-succ-law-add-ℕ : ∀ (m n : ℕ) → ((succ m) +ℕ n ≡ succ (m +ℕ n))
-left-succ-law-add-ℕ m n = refl _
-
-right-succ-law-add-ℕ : ∀ (m n : ℕ) → (m +ℕ (succ n) ≡ succ (m +ℕ n))
-right-succ-law-add-ℕ zero n =  fun-ap succ (inv-path (left-unit-law-add-ℕ n)) 
-right-succ-law-add-ℕ (succ m) n = fun-ap succ (right-succ-law-add-ℕ m n)
-
-assoc-add-ℕ : ∀ (m n k : ℕ) → (m +ℕ n) +ℕ k ≡ m +ℕ (n +ℕ k)
-assoc-add-ℕ zero n k = refl _
-assoc-add-ℕ (succ m) n k = fun-ap succ (assoc-add-ℕ m n k)
-
-
-commutative-add-ℕ : ∀ (m n : ℕ) → m +ℕ n ≡ n +ℕ m
-commutative-add-ℕ zero n = inv-path (right-unit-law-add-ℕ n)
-commutative-add-ℕ (succ m) n = concat (fun-ap succ (commutative-add-ℕ m n))  (inv-path (right-succ-law-add-ℕ n m))
-
-distributive-inv-concat : ∀ {A : Set} {x y z : A} (p : x ≡ y) (q : y ≡ z) → inv-path (p · q) ≡ (inv-path q) · (inv-path p)
-distributive-inv-concat (refl _) q = concat (refl-l (inv-path (q))) (concat (refl _) (inv-path  (refl-r (inv-path q))))
-
-inv-con : ∀ {A : Set} {x y z : A} (p : x ≡ y) (q : y ≡ z) (r : x ≡ z) → (p · q ≡ r) → (q ≡ (inv-path p) · r)
-inv-con (refl x) q r t = concat t (refl r)
-
-path-uniq-inv : ∀ {A : Set} {x y : A} (p : x ≡ y) (q : y ≡ x) → (p · q ≡ (refl _)) → (q ≡ inv-path p)
-path-uniq-inv (refl _) q r = concat r (refl _)
-
-
-con-inv :  ∀ {A : Set} (x y z : A) (p : x ≡ y) (q : y ≡ z) (r : x ≡ z) → (p · q ≡ r) → (p ≡ r · (inv-path q))
-con-inv x y z (refl x) q r t = concat (inv-path (right-inv q)) (fun-ap (λ l → (l · (inv-path q))) t)
-
-
+ap-refl : ∀ {A B : Set} {x y : A} (f : A
